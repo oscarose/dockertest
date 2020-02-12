@@ -24,9 +24,13 @@ pipeline {
               """
            }
        }
-       stage('docker build image and push to docker hub') {                 
-           docker.withRegistry('https://index.docker.io/v1/', 'myrepodocker') {
-               def app = docker.build("belushi/jenkins:${params.image_tag}", '.').push()
+       stage('docker build image and push to docker hub') {
+           steps {
+               script {                 
+                   docker.withRegistry('https://index.docker.io/v1/', 'myrepodocker') {
+                       def app = docker.build("belushi/jenkins:${params.image_tag}", '.').push()
+                   }
+               }
            }
        }
     }
