@@ -1,15 +1,15 @@
-paipeline {
+pipeline {
     agent {
         label'master'
     }
     parameters {             
         string(name: 'image_tag', defaultValue: '', description: 'jenkins image build tag',)
-        //gitParameter(branch: '', branchFilter: 'origin/(.*)', defaultValue: '', description: '', name: 'BRANCH', type: 'PT_BRANCH',) 
+        gitParameter(branch: '', branchFilter: 'origin/(.*)', defaultValue: '', description: '', name: 'BRANCH', type: 'PT_BRANCH',) 
     }    
     stages {        
         stage('checkout scm') {            
             steps {                
-                git branch: 'master',                    
+                git branch: "${params.BRANCH}",                    
                 credentialsId: 'github_jenkins',                        
                 url: 'https://github.com/oscarose/dockertest.git'           
             }        
