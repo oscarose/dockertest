@@ -2,6 +2,10 @@
 - hosts: localhost
   gather_facts: yes
   tasks:
+
+    - name: docker hub login
+      shell: docker login --username={{ docker_username }} --password={{ docker_password }}
+
     - name: build docker image
       shell: docker build . -t {{ ecrrepo_name }}:{{ image_tag }}
 

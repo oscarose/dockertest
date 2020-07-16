@@ -6,6 +6,8 @@ pipeline {
         choice(name: 'aws_acct_id', choices: ['187212085277', 'xxxx', 'yyyy'], description: 'target aws account id',)
         string(name: 'ecrrepo_name', defaultValue: 'ews-demo-me', description: 'target aws ecr repo name',)
         string(name: 'image_tag', defaultValue: '', description: 'docker image build tag',)
+        string(name: 'docker_username', defaultValue: '', description: 'enter your docker hub account userID',)
+        password(name: 'docker_password', defaultValue: '', description: 'enter your docker account password',)
     }
     stages {
         stage('clone down dockerfile repo') {
@@ -27,9 +29,13 @@ pipeline {
         }
         stage('build docker image and push to ecr repo') {
             steps {
-                sh """
-                ansible-playbook $WORKSPACE/build_image.yaml --extra-vars "aws_acct_id=${aws_acct_id} ecrrepo_name=${ecrrepo_name} image_tag=${image_tag}" -vvv
-                """
+                script {
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${docker_password}", var: 'PSWD']]]) {
+                        sh """
+                        ansible-playbook $WORKSPACE/build_image.yaml --extra-vars "docker_username=${docker_username} docker_password=${docker_password} aws_acct_id=${aws_acct_id} ecrrepo_name=${ecrrepo_name} image_tag=${image_tag}" -vvv
+                        """
+                    }
+                }
             }
         }
     }
