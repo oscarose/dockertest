@@ -42,13 +42,15 @@ pipeline {
         stage('scan image and display result') {
            steps {
                script {
-                   sh"""
-                   aws ecr put-image-scanning-configuration --repository-name ${ecrrepo_name} --image-scanning-configuration scanOnPush=true --region ${aws_region}
-                   """
-                   scan_status = sh(returnStdout: true, script: "aws ecr start-image-scan --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
-                   scan_output = sh(returnStdout: true, script: "aws ecr describe-image-scan-findings --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
+                   scan_tableau_container_enabled = sh(
+                       returnStdout: true, script: "aws ecr put-image-scanning-configuration --repository-name ${ecrrepo_name} --image-scanning-configuration scanOnPush=true --region ${aws_region}")
+                   scan_status = sh(
+                       returnStdout: true, script: "aws ecr start-image-scan --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
+                   scan_output = sh(
+                       returnStdout: true, script: "aws ecr describe-image-scan-findings --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
+                   slackSend (channel: 'application-migration', color: '#00FF00', message: "${scan_tableau_container_enabled}")
                    slackSend (channel: 'application-migration', color: '#FFFF00', message: "${scan_status}")
-                   slackSend (channel: 'application-migration', color: '#FFFF00', message: "${scan_output}")
+                   slackSend (channel: 'application-migration', color: '#00FF00', message: "${scan_output}")
                }
             }
         }
