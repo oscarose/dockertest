@@ -45,8 +45,8 @@ pipeline {
                    sh"""
                    aws ecr put-image-scanning-configuration --repository-name ${ecrrepo_name} --image-scanning-configuration scanOnPush=true --region ${aws_region}
                    """
-                   df scan_status = sh(returnStdout: true script: "aws ecr start-image-scan --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
-                   df scan_output = sh(returnStdout: true script: "aws ecr describe-image-scan-findings --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
+                   df scan_status = sh(returnStdout: true, script: "aws ecr start-image-scan --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
+                   df scan_output = sh(returnStdout: true, script: "aws ecr describe-image-scan-findings --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
                    slackSend (channel: 'application-migration', color: '#FFFF00', message: "scan_status")
                    slackSend (channel: 'application-migration', color: '#FFFF00', message: "scan_output")
                }
