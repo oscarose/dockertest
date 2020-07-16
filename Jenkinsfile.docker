@@ -27,11 +27,9 @@ pipeline {
         }
         stage('build docker image and push to ecr repo') {
             steps {
-                script {
-                     sh '''
-                     ansible-playbook $WORKSPACE/build_image.yaml --extra-vars "aws_acct_id=${aws_acct_id} ecrrepo_name=${ecrrepo_name} image_tag=${image_tag}" -vvv
-                     '''
-                }
+                sh """
+                ansible-playbook $WORKSPACE/build_image.yaml --extra-vars "aws_acct_id=${aws_acct_id} ecrrepo_name=${ecrrepo_name} image_tag=${image_tag}" -vvv
+                """
             }
         }
     }
