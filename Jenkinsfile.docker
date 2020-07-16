@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('clone down dockerfile repo') {
             steps {                
-                git branch: "${params.BRANCH}",
+                git branch: 'master',
                     credentialsId: 'github_jenkins',
                         url: 'https://github.com/oscarose/dockertest.git'
             }
