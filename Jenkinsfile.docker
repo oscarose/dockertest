@@ -41,8 +41,8 @@ pipeline {
         }
         stage('scan image and display result') {
             steps {
-               df scan_status = sh script: "aws ecr start-image-scan --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}", returnStdout: true
-               df scan_output = sh script: "aws ecr describe-image-scan-findings --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}", returnStdout: true
+               scan_status = sh script: "aws ecr start-image-scan --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}", returnStdout: true
+               scan_output = sh script: "aws ecr describe-image-scan-findings --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}", returnStdout: true
                sh """
                aws ecr put-image-scanning-configuration --repository-name ${ecrrepo_name} --image-scanning-configuration scanOnPush=true --region ${aws_region}
                aws ecr start-image-scan --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}
