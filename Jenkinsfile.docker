@@ -4,7 +4,7 @@ pipeline {
     }
     parameters {
         choice(name: 'aws_acct_id', choices: ['187212085277', 'xxxx', 'yyyy'], description: 'target aws account id',)
-        choice(name: 'aws_region', choices: ['us-east-1', 'us-east-1', 'yyyy'], description: 'target aws region',)
+        choice(name: 'aws_region', choices: ['us-east-1', 'us-east-2', 'yyyy'], description: 'target aws region',)
         string(name: 'ecrrepo_name', defaultValue: 'ews-demo-me', description: 'target aws ecr repo name',)
         string(name: 'image_tag', defaultValue: '', description: 'docker image build tag',)
         string(name: 'docker_username', defaultValue: '', description: 'enter your docker hub account userID',)
