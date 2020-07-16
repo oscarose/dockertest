@@ -9,9 +9,10 @@ pipeline {
     }
     stages {
         stage('clone down dockerfile repo') {
-            steps {                git branch: "${params.BRANCH}",
-                credentialsId: 'github_jenkins',
-                url: 'https://github.com/oscarose/dockertest.git'
+            steps {                
+                git branch: "${params.BRANCH}",
+                    credentialsId: 'github_jenkins',
+                        url: 'https://github.com/oscarose/dockertest.git'
             }
         }
         stage('download files from s3') {
