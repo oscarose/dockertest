@@ -1,0 +1,16 @@
+---
+- hosts: localhost
+  gather_facts: yes
+  tasks:
+    - name: build docker image
+      shell: docker build . -t {{ ecrrepo_name }}:{{ image_tag }}
+
+    - name: tag aws ecr repo
+      shell: docker tag {{ ecrrepo_name }}:{{ image_tag }} {{ aws_acct_id }}.dkr.ecr.us-east-1.amazonaws.com/{{ ecrrepo_name }}:{{ image_tag }}
+
+    - name: log into ecr
+      shell: $(aws ecr get-login --no-include-email --region us-east-1)
+
+    - name: push to ecr
+      shell: docker push {{ aws_acct_id }}.dkr.ecr.us-east-1.amazonaws.com/{{ ecrrepo_name }}:{{ image_tag }}
+

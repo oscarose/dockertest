@@ -1,0 +1,37 @@
+pipeline {
+    agent {
+        label'master'
+    }
+    parameters {
+        choice(name: 'aws_acct_id', choices: ['187212085277', 'xxxx', 'yyyy'], description: 'target aws account id',)
+        string(name: 'ecrrepo_name', defaultValue: 'ews-demo-me', description: 'target aws ecr repo name',)
+        string(name: 'image_tag', defaultValue: '', description: 'docker image build tag',)
+    }
+    stages {
+        stage('clone down dockerfile repo') {
+            steps {                git branch: "${params.BRANCH}",
+                credentialsId: 'github_jenkins',
+                url: 'https://github.com/oscarose/dockertest.git'
+            }
+        }
+        stage('download files from s3') {
+            steps {              
+              sh """
+              cd ${WORKSPACE}
+              aws s3 cp s3://emekacicddemo/jenkins.war .
+              aws s3 cp s3://emekacicddemo/apache-tomcat-8.5.57.tar.gz .
+              aws s3 cp s3://emekacicddemo/jdk-8u231-linux-x64.tar.gz .
+              """
+           }
+        }
+        stage('build docker image and push to ecr repo') {
+            steps {
+                script {
+                     sh '''
+                     ansible-playbook $WORKSPACE/build_image.yaml --extra-vars "aws_acct_id=${aws_acct_id} ecrrepo_name=${ecrrepo_name} image_tag=${image_tag}" -vvv
+                     '''
+                }
+            }
+        }
+    }
+}
