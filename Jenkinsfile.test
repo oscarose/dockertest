@@ -1,0 +1,95 @@
+pipeline {
+    agent {
+        label'master'
+    }
+    parameters {
+        choice(name: 'aws_acct_id', choices: ['187212085277', 'xxxx', 'yyyy'], description: 'target aws account id',)
+        choice(name: 'aws_region', choices: ['us-east-1', 'us-east-2', 'yyyy'], description: 'target aws region',)
+        string(name: 'ecrrepo_name', defaultValue: 'ews-demo-me', description: 'target aws ecr repo name',)
+        string(name: 'image_tag', defaultValue: '', description: 'docker image build tag',)
+        string(name: 'docker_username', defaultValue: '', description: 'enter your docker hub account userID',)
+        password(name: 'docker_password', defaultValue: '', description: 'enter your docker account password',)
+        string(name: 'ecrlogin_string', defaultValue: '$(aws ecr get-login --no-include-email --region us-east-1)', description: 'aws ecr login string',)
+    }
+    stages {
+        stage('clone down dockerfile repo') {
+            steps {
+                git branch: 'master',
+                    credentialsId: 'github_jenkins',
+                        url: 'https://github.com/oscarose/dockertest.git'
+            }
+        }
+        stage('download files from s3') {
+            steps {
+              sh """
+              cd ${WORKSPACE}
+              aws s3 cp s3://emekacicddemo/jenkins.war .
+              aws s3 cp s3://emekacicddemo/apache-tomcat-8.5.57.tar.gz .
+              aws s3 cp s3://emekacicddemo/jdk-8u231-linux-x64.tar.gz .
+              """
+           }
+        }
+        stage('log into docker hub') {
+            steps {
+                script {
+                    wrap([$class: 'MaskPasswordsBuildWrapper', varPasswordPairs: [[password: "${docker_password}", var: 'PSWD']]]) {
+                        sh """
+                        docker login --username=${docker_username} --password=${docker_password}
+                        """
+                    }
+                }
+            }
+        }
+        stage('build docker image') {   
+            steps {
+                script {
+                    sh """
+                    docker build . -t ${ecrrepo_name }:${image_tag}
+                    """
+                }
+            }
+        }
+        stage('tag docker image with ecr name format') {   
+            steps {
+                script {
+                    sh """
+                    docker tag ${ecrrepo_name}:${image_tag} ${aws_acct_id}.dkr.ecr.us-east-1.amazonaws.com/${ecrrepo_name}:${image_tag}
+                    """
+                }
+            }
+        }
+        stage('log into ecr') {   
+            steps {
+                script {
+                    sh """
+                    ${ecrloging_string}
+                    """
+                }
+            }
+        }
+        stage('push docker image to ecr repo') {   
+            steps {
+                script {
+                    sh """
+                    docker push ${aws_acct_id}.dkr.ecr.us-east-1.amazonaws.com/${ecrrepo_name}:${image_tag}
+                    """
+                }
+            }
+        }
+        stage('scan image and display result') {
+           steps {
+               script {
+                   scan_tableau_container_enabled = sh(
+                       returnStdout: true, script: "aws ecr put-image-scanning-configuration --repository-name ${ecrrepo_name} --image-scanning-configuration scanOnPush=true --region ${aws_region}")
+                   scan_status = sh(
+                       returnStdout: true, script: "aws ecr start-image-scan --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
+                   scan_output = sh(
+                       returnStdout: true, script: "aws ecr describe-image-scan-findings --repository-name ${ecrrepo_name} --image-id imageTag=${image_tag} --region ${aws_region}")
+                   slackSend (channel: 'application-migration', color: '#00FF00', message: "${scan_tableau_container_enabled}")
+                   slackSend (channel: 'application-migration', color: '#FFFF00', message: "${scan_status}")
+                   slackSend (channel: 'application-migration', color: '#00FF00', message: "${scan_output}")
+               }
+            }
+        }
+    }
+}
