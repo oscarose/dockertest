@@ -62,7 +62,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    ${ecrloging_string}
+                    ${ecrlogin_string}
                     """
                 }
             }
